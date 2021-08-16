@@ -12,7 +12,7 @@ const numeral = require('numeral')
 const _ = require('lodash')
 
 // SERVER CONFIG
-const PORT = process.env.PORT || 5000
+const PORT = process.env.PORT || 6000
 const app = express();
 const server = http.createServer(app).listen(PORT, () => console.log(`Listening on ${ PORT }`))
 app.use(express.static(path.join(__dirname, 'public')))
@@ -289,11 +289,12 @@ async function checkArb(args) {
   // Determine if profitable
   let min_profile
   if (assetOrder[0] == 'USDC') {
-    min_profile = 90000000
+    min_profile = 20000000
   } else if (assetOrder[0] == 'WETH') {
-    min_profile = 40000000000000000n
+    min_profile = 10000000000000000n
   }
   const profitable = netProfit > min_profile
+  // const profitable = true
 
   // If profitable, then stop looking and trade!
   if(profitable) {
@@ -381,34 +382,34 @@ async function trade(flashTokenSymbol, flashTokenAddress, arbTokenAddress, order
   const distribution = oneSplitData.distribution
 
   // Calculate slippage
-  const  minReturnWithSlippage = (new web3.utils.BN(minReturn)).mul(new web3.utils.BN('999')).div(new web3.utils.BN('1000')).toString()
+  const  minReturnWithSlippage = (new web3.utils.BN(minReturn)).mul(new web3.utils.BN('998')).div(new web3.utils.BN('1000')).toString()
   console.log("origin min return: ", minReturn)
   console.log("1inch min return: ", minReturnWithSlippage)
-  // await traderContract.methods.getFlashloan(
-  //   flashTokenAddress, // address flashToken,
-  //   FLASH_AMOUNT, // uint256 flashAmount,
-  //   arbTokenAddress, // address arbToken,
-  //   data, // bytes calldata zrxData,
-  //   minReturnWithSlippage.toString(), // uint256 oneSplitMinReturn,
-  //   distribution, // uint256[] calldata oneSplitDistribution
-  // ).estimateGas({from: process.env.ADDRESS}, function(error, gas) {
-  //   console.log("error: ", error, "gas: ", gas);
-  // })
-
-  // Perform Trade
-  receipt = await traderContract.methods.getFlashloan(
+  await traderContract.methods.getFlashloan(
     flashTokenAddress, // address flashToken,
     FLASH_AMOUNT, // uint256 flashAmount,
     arbTokenAddress, // address arbToken,
     data, // bytes calldata zrxData,
     minReturnWithSlippage.toString(), // uint256 oneSplitMinReturn,
     distribution, // uint256[] calldata oneSplitDistribution
-  ).send({
-    from: process.env.ADDRESS,
-    gas: process.env.GAS_LIMIT,
-    gasPrice: web3.utils.toWei(process.env.GAS_PRICE, 'Gwei')
+  ).estimateGas({from: process.env.ADDRESS}, function(error, gas) {
+    console.log("error: ", error, "gas: ", gas);
   })
-  console.log("receipt:", receipt)
+
+  // Perform Trade
+  // receipt = await traderContract.methods.getFlashloan(
+  //   flashTokenAddress, // address flashToken,
+  //   FLASH_AMOUNT, // uint256 flashAmount,
+  //   arbTokenAddress, // address arbToken,
+  //   data, // bytes calldata zrxData,
+  //   minReturnWithSlippage.toString(), // uint256 oneSplitMinReturn,
+  //   distribution, // uint256[] calldata oneSplitDistribution
+  // ).send({
+  //   from: process.env.ADDRESS,
+  //   gas: process.env.GAS_LIMIT,
+  //   gasPrice: web3.utils.toWei(process.env.GAS_PRICE, 'Gwei')
+  // })
+  // console.log("receipt:", receipt)
 }
 
 // FETCH ORDERBOOK
